@@ -28,6 +28,10 @@ const generateId = () => {
 }
 
 // Routes
+app.get('/', (req, res) => {
+  res.send('<h1>Phonebook API is running 🚀</h1><p>Use <code>/api/persons</code> to get data</p>')
+})
+
 app.get('/api/persons', (request, response) => {
   response.json(persons)
 })
