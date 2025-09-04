@@ -1,64 +1,90 @@
-// backend/index.js
 import dotenv from 'dotenv';
-dotenv.config({ path: '../.env' });
-import express from 'express'
-import { set, connect, Schema, model } from 'mongoose';
-const Person = require('./models/person') // import model
+import express from 'express';
+import { set, connect } from 'mongoose';
+import Person from '../models/person.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const app = express()
+// Load environment variables first
+dotenv.config();
 
+const app = express();
+app.use(express.json());
 
-const PORT = process.env.PORT
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
-})
-
+// MongoDB connection
 set('strictQuery', false);
 
-const url = process.env.MONGODB_URI;
-console.log("MONGODB_URI from env:", process.env.MONGODB_URI);
-console.log('connecting to', url);
+// Add validation for MongoDB URI
+if (!process.env.MONGODB_URI) {
+  console.error('❌ MONGODB_URI environment variable is not defined');
+  process.exit(1);
+}
 
-connect(url)
+console.log('connecting to MongoDB...');
+
+connect(process.env.MONGODB_URI)
   .then(() => {
     console.log('✅ connected to MongoDB');
   })
   .catch(error => {
     console.log('❌ error connecting to MongoDB:', error.message);
+    process.exit(1);
   });
 
-const personSchema = new Schema({
-  name: String,
-  number: String,
-});
-
-personSchema.set('toJSON', {
-  transform: (document, returnedObject) => {
-    returnedObject.id = returnedObject._id.toString();
-    delete returnedObject._id;
-    delete returnedObject.__v;
-  },
+// API routes
+app.get('/api/persons', (request, response, next) => {
+  Person.find({})
+    .then(persons => {
+      response.json(persons);
+    })
+    .catch(error => next(error));
 });
 
 app.post('/api/persons', (request, response, next) => {
-  const body = request.body
-  
+  const body = request.body;
+
   if (!body.name || !body.number) {
-    return response.status(400).json({
-      error: 'name or number missing'
-    })
+    return response.status(400).json({ error: 'name or number missing' });
   }
-  
+
   const person = new Person({
     name: body.name,
     number: body.number
-  })
-  
+  });
+
   person.save()
     .then(savedPerson => {
-      response.status(201).json(savedPerson)
+      response.status(201).json(savedPerson);
     })
-    .catch(error => next(error))
-})
+    .catch(error => next(error));
+});
 
-export default model('Person', personSchema);
+// Serve frontend static files
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+app.use(express.static(path.join(__dirname, 'dist')));
+
+// Catch-all handler for frontend routes (safer approach)
+app.get(/^(?!\/api).*/, (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
+
+// Error handling middleware
+app.use((error, request, response, next) => {
+  console.error(error.message);
+  
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' });
+  } else if (error.name === 'ValidationError') {
+    return response.status(400).json({ error: error.message });
+  }
+
+  response.status(500).json({ error: 'something went wrong' });
+});
+
+// Start server
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
