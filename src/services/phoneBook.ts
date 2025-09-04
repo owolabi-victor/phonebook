@@ -3,7 +3,7 @@ import axios from 'axios'
 import type { Person } from '../App'
 
 // Use environment variable for API URL
-const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/persons'
+const baseUrl = import.meta.env.VITE_API_URL || '/api/persons'
 
 const generateId = (): number => {
   return Math.floor(Math.random() * 1000000) + 1
