@@ -80,7 +80,7 @@ app.get('/', (req, res) => {
 // Get all persons from MongoDB
 app.get('/api/persons', (request, response, next) => {
   console.log('GET /api/persons called - fetching from MongoDB...')
-  
+
   Person.find({})
     .then(persons => {
       console.log(`Found ${persons.length} persons in MongoDB:`)
@@ -111,18 +111,18 @@ app.get('/api/persons/:id', (request, response, next) => {
 // Add new person to MongoDB
 app.post('/api/persons', (request, response, next) => {
   const body = request.body
-  
+
   if (!body.name || !body.number) {
     return response.status(400).json({
       error: 'name or number missing'
     })
   }
-  
+
   const person = new Person({
     name: body.name,
     number: body.number
   })
-  
+
   person.save()
     .then(savedPerson => {
       response.status(201).json(savedPerson)
@@ -133,12 +133,12 @@ app.post('/api/persons', (request, response, next) => {
 // Update person in MongoDB
 app.put('/api/persons/:id', (request, response, next) => {
   const body = request.body
-  
+
   const person = {
     name: body.name,
     number: body.number
   }
-  
+
   Person.findByIdAndUpdate(request.params.id, person, { new: true })
     .then(updatedPerson => {
       if (updatedPerson) {
@@ -177,7 +177,7 @@ app.get('/info', (request, response) => {
 // Error handling middleware
 const errorHandler = (error, request, response, next) => {
   console.error(error.message)
-  
+
   if (error.name === 'CastError') {
     return response.status(400).send({ error: 'malformatted id' })
   } else if (error.name === 'ValidationError') {
@@ -185,7 +185,7 @@ const errorHandler = (error, request, response, next) => {
   } else if (error.name === 'MongoServerError' && error.message.includes('E11000 duplicate key error')) {
     return response.status(400).json({ error: 'name must be unique' })
   }
-  
+
   next(error)
 }
 

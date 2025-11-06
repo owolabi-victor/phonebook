@@ -1,51 +1,64 @@
-//phoneBook.ts
+// src/services/phoneBook.ts
 import axios from 'axios'
 import type { Person } from '../App'
 
-// Use environment variable for API URL
+// ✅ Backend base URL
 const baseUrl = import.meta.env.VITE_API_URL || '/api/persons'
 
-const generateId = (): number => {
-  return Math.floor(Math.random() * 1000000) + 1
-}
-
-const getAll = async (): Promise<Person[]> => {
-  const request = axios.get<Person[]>(baseUrl)
-  const response = await request
-  return response.data
-}
-
-const create = async (newObject: Omit<Person, 'id'>): Promise<Person> => {
-    const personWithId = {
-    ...newObject,
-    id: generateId()
+// ✅ Add token to all requests
+const getAuthConfig = () => {
+  const token = localStorage.getItem('token')
+  return {
+    headers: { Authorization: `Bearer ${token}` }
   }
-  
-  console.log('Creating person with generated ID:', personWithId)
+}
 
-  console.log(newObject)
-  const request = axios.post<Person>(baseUrl, personWithId)
-  const res = await request
+/* -------------------------------------------------- */
+/* PAGINATED RESPONSE TYPE */
+export type PaginatedResponse = {
+  data: Person[];
+  totalPages: number;
+  page: number;
+  limit: number;
+  total: number;
+}
+
+/* -------------------------------------------------- */
+/* GET ALL (paginated) */
+const getAll = async (page = 1, limit = 4): Promise<PaginatedResponse> => {
+  const res = await axios.get<PaginatedResponse>(
+    `${baseUrl}?page=${page}&limit=${limit}`,
+    getAuthConfig()
+  )
   return res.data
 }
 
-const update = async (id: number, newObject: Person): Promise<Person> => {
-  const request =  axios.put<Person>(`${baseUrl}/${id}`, newObject)
-  const res = await request
+/* -------------------------------------------------- */
+/* CREATE */
+const create = async (newObject: Omit<Person, 'id'>): Promise<Person> => {
+  const res = await axios.post<Person>(baseUrl, newObject, getAuthConfig())
   return res.data
 }
 
-const remove = async (id: number): Promise<void> => {
-  const url = `${baseUrl}/${id}`;
-  console.log('DELETE request to:', url); 
-  await axios.delete(url);};
+/* -------------------------------------------------- */
+/* UPDATE */
+const update = async (
+  id: string | number,
+  newObject: Partial<Person>
+): Promise<Person> => {
+  const res = await axios.put<Person>(
+    `${baseUrl}/${id}`,
+    newObject,
+    getAuthConfig()
+  )
+  return res.data
+}
 
-const PhoneBookService = {
-  getAll,
-  create,
-  update,
-  remove, 
-};
+/* -------------------------------------------------- */
+/* DELETE */
+const remove = async (id: string | number): Promise<void> => {
+  await axios.delete(`${baseUrl}/${id}`, getAuthConfig())
+}
 
-
-export default PhoneBookService;
+/* -------------------------------------------------- */
+export default { getAll, create, update, remove }

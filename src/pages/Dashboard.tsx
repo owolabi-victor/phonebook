@@ -1,9 +1,9 @@
-// src/App.tsx
+// src/pages/Dashboard.tsx
 import React, { useState, useEffect } from 'react'
-import { PersonForm } from './components/PersonForm'
-import { FilteredPersons } from './components/filter'
-import PhoneBookService from './services/phoneBook'
-import { useAuth } from './context/AuthContext'
+import { PersonForm } from '../components/PersonForm'
+import { FilteredPersons } from '../components/filter'
+import PhoneBookService from '../services/phoneBook'
+import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 
 type ButtonProps = {
@@ -17,7 +17,7 @@ type ButtonProps = {
 export type Person = {
   name: string
   number: string
-  id: string | number   // <-- backend now returns string _id
+  id: string | number
 }
 
 export const Button = ({
@@ -56,7 +56,7 @@ export const Button = ({
   )
 }
 
-const App = () => {
+export const Dashboard = () => {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
 
@@ -66,9 +66,11 @@ const App = () => {
   const [search, setSearch] = useState('')
   const [notification, setNotification] = useState<string | null>(null)
 
+  console.log('🐛 persons state:', persons, 'type:', typeof persons, 'isArray:', Array.isArray(persons))
+
   // Pagination
   const [page, setPage] = useState(1)
-  const limit = 10
+  const limit = 4
   const [totalPages, setTotalPages] = useState(1)
 
   const showNotification = (msg: string) => {
@@ -76,18 +78,23 @@ const App = () => {
     setTimeout(() => setNotification(null), 5000)
   }
 
-  /* --------------------------------------------------------------
-     FETCH PERSONS – ONLY WHEN USER IS LOGGED IN
-     -------------------------------------------------------------- */
   useEffect(() => {
-    if (!user) return   // ← PREVENT 401
+    if (!user) return
+
+    console.log('🔄 Fetching contacts for page:', page)
 
     PhoneBookService.getAll(page, limit)
       .then((resp) => {
-        setPersons(resp.data)
-        setTotalPages(resp.totalPages)
+        console.log('✅ API Success:', resp)
+        // Ensure we always set an array
+        setPersons(Array.isArray(resp.data) ? resp.data : [])
+        setTotalPages(resp.totalPages || 1)
       })
       .catch((err) => {
+        console.error('❌ API Failed:', err)
+        // CRITICAL: Always reset to empty array on error
+        setPersons([])
+
         if (err.response?.status === 401) {
           logout()
           navigate('/login')
@@ -97,9 +104,6 @@ const App = () => {
       })
   }, [user, page, logout, navigate])
 
-  /* --------------------------------------------------------------
-     ADD CONTACT
-     -------------------------------------------------------------- */
   const addNewObjects = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const trimmedName = newName.trim()
@@ -114,10 +118,10 @@ const App = () => {
       return
     }
 
-    const exists = persons.some(
+    const exists = (persons || []).some(
       (p) =>
         p.name.toLowerCase() === trimmedName.toLowerCase() &&
-        p.number === newNumber
+    p.number === newNumber
     )
     if (exists) {
       alert(`${trimmedName} is already in your phonebook`)
@@ -132,17 +136,13 @@ const App = () => {
         setNewName('')
         setNewNumber('')
         showNotification(`${returned.name} was added`)
-        // auto-advance page if needed
-        if (persons.length + 1 > limit) setPage((p) => p + 1)
+        if ((persons || []).length + 1 > limit) setPage((p) => p + 1)
       })
       .catch((err) => {
         showNotification(err.response?.data?.error || 'Failed to add')
       })
   }
 
-  /* --------------------------------------------------------------
-     UPDATE / DELETE helpers
-     -------------------------------------------------------------- */
   const handleUpdate = (id: string | number, updated: Person) => {
     PhoneBookService.update(id, updated)
       .then((returned) => {
@@ -181,10 +181,7 @@ const App = () => {
     }
   }
 
-  /* --------------------------------------------------------------
-     UI
-     -------------------------------------------------------------- */
-  const filtered = persons.filter((p) =>
+  const filtered = (persons || []).filter((p) =>
     search
       ? `${p.name} ${p.number}`.toLowerCase().includes(search.toLowerCase())
       : true
@@ -198,7 +195,7 @@ const App = () => {
           <div className="flex items-center justify-center">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-                <span className="text-white text-lg font-semibold">Phonebook</span>
+                <span className="text-white text-lg font-semibold">📱</span>
               </div>
               <h1 className="text-2xl font-bold text-gray-900">Phonebook</h1>
             </div>
@@ -212,7 +209,7 @@ const App = () => {
         {notification && (
           <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-xl shadow-sm animate-pulse">
             <div className="flex items-center space-x-2">
-              <span className="text-green-600">Checkmark</span>
+              <span className="text-green-600">✓</span>
               <span className="text-sm font-medium">{notification}</span>
             </div>
           </div>
@@ -234,7 +231,7 @@ const App = () => {
         {/* Search */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
           <div className="flex items-center space-x-3 mb-3">
-            <span className="text-gray-500">Search</span>
+            <span className="text-gray-500">🔍</span>
             <h2 className="text-lg font-semibold text-gray-900">Search Contacts</h2>
           </div>
           <div className="relative">
@@ -250,7 +247,7 @@ const App = () => {
                 onClick={() => setSearch('')}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
-                Clear
+                ✕
               </button>
             )}
           </div>
@@ -259,7 +256,7 @@ const App = () => {
         {/* Add Contact */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
           <div className="flex items-center space-x-3 mb-4">
-            <span className="text-gray-500">Add</span>
+            <span className="text-gray-500">➕</span>
             <h2 className="text-lg font-semibold text-gray-900">Add New Contact</h2>
           </div>
           <PersonForm
@@ -271,12 +268,110 @@ const App = () => {
           />
         </div>
 
+        {/* Export & Import Section */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 space-y-4">
+          <h2 className="text-lg font-semibold text-gray-900">Export / Import</h2>
+
+          <div className="flex flex-wrap gap-2">
+            {/* Download CSV */}
+            <button
+              onClick={async () => {
+                const token = localStorage.getItem('token')
+                if (!token) return alert('Please log in first')
+
+                try {
+                  const res = await fetch('http://localhost:3001/api/persons/export', {
+                    headers: { Authorization: `Bearer ${token}` }
+                  })
+
+                  if (!res.ok) {
+                    const err = await res.json()
+                    return alert(err.error || 'Export failed')
+                  }
+
+                  const blob = await res.blob()
+                  const url = URL.createObjectURL(blob)
+                  const a = document.createElement('a')
+                  a.href = url
+                  a.download = `contacts_${user?.username}.csv`
+                  a.click()
+                  URL.revokeObjectURL(url)
+                } catch {
+                  alert('Network error')
+                }
+              }}
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition"
+            >
+              Download CSV
+            </button>
+
+            {/* Email CSV */}
+            <button
+              onClick={async () => {
+                const email = prompt('Send contacts to:')
+                if (!email) return
+                const token = localStorage.getItem('token')
+                if (!token) return alert('Please log in')
+
+                try {
+                  const res = await fetch('http://localhost:3001/api/persons/export/email', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      Authorization: `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ email })
+                  })
+                  const data = await res.json()
+                  alert(data.message || data.error)
+                } catch {
+                  alert('Network error')
+                }
+              }}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition"
+            >
+              Email CSV
+            </button>
+
+            {/* Import CSV */}
+            {/* <label className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition">
+              Import CSV
+              <input
+                type="file"
+                accept=".csv"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0]
+                  if (!file) return
+                  const formData = new FormData()
+                  formData.append('csv', file)
+                  const token = localStorage.getItem('token')
+                  if (!token) return alert('Please log in')
+
+                  try {
+                    const res = await fetch('http://localhost:3001/api/persons/import', {
+                      method: 'POST',
+                      headers: { Authorization: `Bearer ${token}` },
+                      body: formData
+                    })
+                    const data = await res.json()
+                    alert(data.message || data.error)
+                    window.location.reload()
+                  } catch {
+                    alert('Network error')
+                  }
+                }}
+              />
+            </label> */}
+          </div>
+        </div>
+
         {/* Contacts List */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <span className="text-gray-500">People</span>
+                <span className="text-gray-500">👥</span>
                 <h2 className="text-lg font-semibold text-gray-900">Contacts</h2>
               </div>
               <span className="text-sm text-gray-500 bg-gray-200 px-2 py-1 rounded-full">
@@ -327,5 +422,3 @@ const App = () => {
     </div>
   )
 }
-
-export default App

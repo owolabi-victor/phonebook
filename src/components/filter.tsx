@@ -1,40 +1,37 @@
-//filter.tsx
-import type { Person } from "../App";
-import { Button } from "../App";
+// src/components/filter.tsx
+import type { Person } from '../pages/Dashboard'
+import { Button } from '../pages/Dashboard'
+import React from 'react'
 
 type FilteredPersonsProps = {
   persons: Person[];
   search: string;
-  onEdit: (id: number) => void;
-  handleDelete: (id: number) => void;
-};
+  onEdit: (id: string | number) => void;  // ✅ Match Dashboard type
+  handleDelete: (id: string | number) => void;  // ✅ Match Dashboard type
+}
 
 export const FilteredPersons = ({ persons, search, onEdit, handleDelete }: FilteredPersonsProps) => {
-  const filtered = persons.filter((person) => {
-    if (!search) return true;
-    return `${person.name} ${person.number}`
-      .toLowerCase()
-      .includes(search.toLowerCase());
-  });
+  // ✅ Remove duplicate filtering - Dashboard already filters
+  // The persons prop is already filtered in Dashboard.tsx
 
-  if (filtered.length === 0) {
+  if (persons.length === 0) {
     return (
       <div className="p-8 text-center">
         <div className="text-gray-400 text-4xl mb-3">🔍</div>
         <p className="text-gray-500 text-sm">No contacts found</p>
         <p className="text-gray-400 text-xs mt-1">Try adjusting your search</p>
       </div>
-    );
+    )
   }
 
   return (
     <div className="divide-y divide-gray-100">
-      {filtered.map((p, index) => (
+      {persons.map((p, index) => (
         <div
           key={p.id}
           className={`p-4 transition-all duration-200 hover:bg-gray-50 ${
             index === 0 ? 'rounded-t-xl' : ''
-          } ${index === filtered.length - 1 ? 'rounded-b-xl' : ''}`}
+          } ${index === persons.length - 1 ? 'rounded-b-xl' : ''}`}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3 flex-1 min-w-0">
@@ -49,16 +46,16 @@ export const FilteredPersons = ({ persons, search, onEdit, handleDelete }: Filte
               </div>
             </div>
             <div className="flex space-x-2 ml-4">
-              <Button 
-                text="Edit" 
-                onClick={() => onEdit(p.id)} 
-                variant="secondary" 
-                // size="sm"
+              <Button
+                text="Edit"
+                onClick={() => onEdit(p.id)}
+                variant="secondary"
+                size="sm"
               />
-              <Button 
-                text="Delete" 
-                onClick={() => handleDelete(p.id)} 
-                variant="danger" 
+              <Button
+                text="Delete"
+                onClick={() => handleDelete(p.id)}
+                variant="danger"
                 size="sm"
               />
             </div>
@@ -66,5 +63,5 @@ export const FilteredPersons = ({ persons, search, onEdit, handleDelete }: Filte
         </div>
       ))}
     </div>
-  );
-};
+  )
+}
