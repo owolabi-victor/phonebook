@@ -7,7 +7,7 @@
     "build": "npm run build:frontend && npm run move:dist",
     "build:frontend": "vite build",
     "move:dist": "cp -r dist backend/",
-    "start": "NODE_ENV=production node backend/index.js",
+    "start": "NODE_ENV=production node backend/app.js",
     "dev": "NODE_ENV=development node --watch backend/app.js",
     "test": "NODE_ENV=test node --test",
     "lint": "eslint ."
