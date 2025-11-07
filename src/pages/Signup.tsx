@@ -13,7 +13,8 @@ export const Signup = () => {
     setError('')
 
     try {
-      const res = await fetch('http://localhost:3001/api/users/signup', {
+      // ✅ Use relative URL - works on any domain
+      const res = await fetch('/api/users/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),

@@ -1,5 +1,6 @@
 // backend/app.js
 import express from 'express'
+import cors from 'cors'
 import { connect } from 'mongoose'
 import config from '../utils/config.js'
 import logger from '../utils/logger.js'
@@ -25,6 +26,9 @@ info('testing mic 123 Connecting to MongoDB...')
 connect(MONGODB_URI)
   .then(() => info('Connected to MongoDB'))
   .catch((err) => _error('MongoDB connection error:', err.message))
+
+// ✅ CORS - MUST be before other middleware
+app.use(cors())
 
 // Middleware
 app.use(fileUpload({
