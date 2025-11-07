@@ -306,6 +306,7 @@ export const Dashboard = () => {
             </button>
 
             {/* Email CSV */}
+
             <button
               onClick={async () => {
                 const email = prompt('Send contacts to:')
@@ -314,17 +315,31 @@ export const Dashboard = () => {
                 if (!token) return alert('Please log in')
 
                 try {
+                  console.log('🔄 Sending email request...')
+                  console.log('📧 Email:', email)
+                  console.log('🔑 Token:', token?.substring(0, 20) + '...')
+
                   const res = await fetch('/api/persons/export/email', {
+                    method: 'POST',
                     headers: {
                       'Content-Type': 'application/json',
                       Authorization: `Bearer ${token}`
                     },
                     body: JSON.stringify({ email })
                   })
+
+                  console.log('📥 Response status:', res.status)
+                  console.log('📥 Response ok:', res.ok)
+
                   const data = await res.json()
+                  console.log('📥 Response data:', data)
+
                   alert(data.message || data.error)
-                } catch {
-                  alert('Network error')
+                } catch (err) {
+                  console.error('❌ Fetch error:', err)
+                  console.error('❌ Error type:', err.constructor.name)
+                  console.error('❌ Error message:', err.message)
+                  alert('Network error: ' + err.message)
                 }
               }}
               className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition"
