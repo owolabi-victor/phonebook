@@ -21,7 +21,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 // Connect to MongoDB
-info('Connecting to MongoDB...')
+info('testing mic 123 Connecting to MongoDB...')
 connect(MONGODB_URI)
   .then(() => info('Connected to MongoDB'))
   .catch((err) => _error('MongoDB connection error:', err.message))
