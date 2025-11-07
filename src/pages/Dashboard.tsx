@@ -280,7 +280,7 @@ export const Dashboard = () => {
                 if (!token) return alert('Please log in first')
 
                 try {
-                  const res = await fetch('http://localhost:3001/api/persons/export', {
+                  const res = await fetch('/api/persons/export', {
                     headers: { Authorization: `Bearer ${token}` }
                   })
 
@@ -314,8 +314,7 @@ export const Dashboard = () => {
                 if (!token) return alert('Please log in')
 
                 try {
-                  const res = await fetch('http://localhost:3001/api/persons/export/email', {
-                    method: 'POST',
+                  const res = await fetch('/api/persons/export/email', {
                     headers: {
                       'Content-Type': 'application/json',
                       Authorization: `Bearer ${token}`

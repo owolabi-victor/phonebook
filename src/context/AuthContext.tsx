@@ -37,7 +37,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchUser = async (token: string) => {
     try {
-      const res = await fetch('http://localhost:3001/api/users/me', {
+      // ✅ Use relative URL
+      const res = await fetch('/api/users/me', {
         headers: { Authorization: `Bearer ${token}` },
       })
       if (res.ok) {
